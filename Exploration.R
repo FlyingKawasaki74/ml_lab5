@@ -16,13 +16,17 @@ plz_einwohner$plz <- as.numeric(plz_einwohner$plz)
 
 zuordnung_plz_ort <- read_csv('./zuordnung_plz_ort.csv')
 zuordnung_plz_ort$plz <- as.numeric(zuordnung_plz_ort$plz)
-drop.cols <- c('osm_id', 'bundesland')
+drop.cols <- c('osm_id')
 zuordnung_plz_ort <- zuordnung_plz_ort %>% select(-one_of(drop.cols))
 
 as.data.frame(data)
 as.data.frame(plz_einwohner)
 as.data.frame(zuordnung_plz_ort)
 
-data <- merge(data,plz_einwohner, by.x="postcode",by.y="plz")
-data <- merge(data,zuordnung_plz_ort, by.x="postcode",by.y="plz")
+data <- merge(data,plz_einwohner, by.x="postcode",by.y="plz",all.x=TRUE) 
+data <- merge(data,zuordnung_plz_ort, by.x="postcode",by.y="plz",all.x=TRUE)
+
+
+
+
 
