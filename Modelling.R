@@ -81,7 +81,7 @@ for (ntree in arr_ntree){
         
         # Save partial progress
         cv_results = tibble(temparr_ntree, temparr_mtry_divideby, temparr_dataset, temparr_rmse, temparr_bias, temparr_var)
-        write_csv(cv_results, "grid_search_temp.csv")
+        write_csv(union(previous_gridsearch_results,cv_results), "grid_search_temp.csv")
       }
       else{
         print(paste0("Skipping combination ntree=",ntree,";mtry=p/",mtry,";set_type=",set_type))
@@ -91,7 +91,7 @@ for (ntree in arr_ntree){
 }
 
 cv_results = tibble(temparr_ntree, temparr_mtry_divideby, temparr_dataset, temparr_rmse, temparr_bias, temparr_var)
-write_csv(cv_results, "grid_search.csv")
+write_csv(union(previous_gridsearch_results,cv_results), "grid_search.csv")
 
 
 # Final model
