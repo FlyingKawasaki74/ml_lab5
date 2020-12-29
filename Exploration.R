@@ -45,16 +45,26 @@ data_onehot <- data %>% mutate(
   saarland = ifelse(bundesland == "Saarland",1,0),
   schleswig = ifelse(bundesland == "Schleswig-Holstein",1,0)
   # Skip Schleswig-Holstein because it is true when all others are 0
-)
+) 
+
+data_einwohner <- data %>%
+  group_by(ort) %>%
+  summarize(
+    einwohner_total = sum(einwohner)
+  )
+  
 
 data_relevant <- data_onehot %>%
+  left_join(data_einwohner, by="ort") %>%
   select('Rent', 'livingspace', 'NoOfRooms', 'lat', 'lon', 'distanceShop',
          'dum_balcony', 'dum_builtinkitchen', 'dum_floorplan', 'dum_garden',
          'dum_privateoffer', 'ost', 'sachsenanhalt', 'brandenburg', 'sachsen',
          'thueringen', 'mecklenburg', 'baden', 'bayern', 'berlin', 'bremen',
          'hamburg', 'niedersachsen', 'nrw', 'rheinland', 'saarland', 'schleswig',
-         'einwohner') %>%
+         'einwohner', 'einwohner_total') %>%
   na.omit()
+
+write_csv(data_relevant, "model_input_data.csv")
 
 # Distribution of target variable
 #-----------------------------------
