@@ -1,6 +1,7 @@
 library(tidyverse)
 library(readr)
 library(randomForest)
+library(Metrics)
 
 data <- read_csv('./0_Data/model_input_data.csv')
 
@@ -20,10 +21,6 @@ index = 1
 
 evalRMSE = function(y, yhat) {
   sqrt(mean((y - yhat)^2, na.rm = TRUE))
-}
-
-get_bias = function(y, y_hat) {
-  (mean(y_hat) - y)^2
 }
 
 # Each possible value for ntree
@@ -58,7 +55,7 @@ for (ntree in arr_ntree){
         predictions = predict(rf, cv_test)
         error = evalRMSE(cv_test[["Rent"]], predictions)
         temparr_cv_rmse[k] = error
-        temparr_cv_bias[k] = get_bias(cv_test[["Rent"]], predictions)
+        temparr_cv_bias[k] = bias(cv_test[["Rent"]], predictions)
         temparr_cv_variance[k] = var(predictions)
       }
       
@@ -94,10 +91,12 @@ write_csv(cv_results, "grid_search.csv")
 
 
 # Plot predictions and true target for final model
-#rf = randomForest(Rent ~ .,data, ntree=100, mtry=(ncol(data)/3))
+#rf = randomForest(Rent ~ .,data, ntree=10, mtry=(ncol(data)/3))
 
 predictions = predict(rf, data)
 error = evalRMSE(data[["Rent"]], predictions)
+bias = bias(data[["Rent"]], predictions)
+var = var(predictions)
 
 data[["predictions"]] <- predictions
 
