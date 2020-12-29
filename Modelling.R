@@ -4,12 +4,13 @@ library(randomForest)
 library(Metrics)
 
 data <- read_csv('./0_Data/model_input_data.csv')
+previous_gridsearch_results = read_csv('./grid_search_temp.csv')
 
 # Define allowed hyperparameter values
 arr_ntree = c(100,200,300,400,500,600,700,800,900,1000)
 arr_mtry_divideby = c(4,3,2)
 arr_data_set = c("full", "relevant_only")
-cv_k = c(seq(1,10,1))
+cv_k = c(seq(1,5,1))
 
 temparr_ntree = NULL
 temparr_mtry_divideby = NULL
@@ -29,55 +30,62 @@ for (ntree in arr_ntree){
   for (mtry in arr_mtry_divideby){
     # Decide whether to use the full data set, or only variables with strong correlation
     for (set_type in arr_data_set){
-      if (set_type == "relevant_only"){
-        current_data = data %>% select("Rent", "livingspace", "ost",
-                                       "dum_builtinkitchen", "berlin", "bayern",
-                                       "hamburg", "baden")
+      # Check if we already did a CV for that hyperparam combination
+      if(nrow(previous_gridsearch_results %>% filter(temparr_ntree==ntree & temparr_mtry_divideby==mtry & temparr_dataset==set_type))==0){
+        if (set_type == "relevant_only"){
+          current_data = data %>% select("Rent", "livingspace", "ost",
+                                         "dum_builtinkitchen", "berlin", "bayern",
+                                         "hamburg", "baden")
+        }
+        else{
+          current_data = data
+        }
+        
+        # Mark subsets for CV with corresponding k
+        sampleInd = sample(x = c(seq(1,10,1)), size = nrow(current_data),
+                           prob = c(rep(0.1,10)), replace = TRUE)
+        
+        temparr_cv_rmse = NULL
+        temparr_cv_bias = NULL
+        temparr_cv_variance = NULL
+        # Do CV
+        for (k in cv_k){
+          # Random row sampling 
+          cv_train = data[sampleInd!=k,]
+          cv_test = data[sampleInd==k,]
+          
+          rf = randomForest(Rent ~ .,cv_train, ntree=ntree, mtry=(ncol(cv_train)/mtry))
+          predictions = predict(rf, cv_test)
+          error = evalRMSE(cv_test[["Rent"]], predictions)
+          temparr_cv_rmse[k] = error
+          temparr_cv_bias[k] = bias(cv_test[["Rent"]], predictions)
+          temparr_cv_variance[k] = var(predictions)
+        }
+        
+        avg_error = mean(temparr_cv_rmse)
+        avg_bias = mean(temparr_cv_bias)
+        avg_variance = mean(temparr_cv_variance)
+        
+        # Save results of current hyperparameter evaluation
+        temparr_ntree[index] = ntree
+        temparr_mtry_divideby[index] = mtry
+        temparr_dataset[index] = set_type
+        temparr_rmse[index] = avg_error
+        temparr_bias[index] = avg_bias
+        temparr_var[index] = avg_variance
+        
+        # For tracking progress
+        print(paste0(Sys.time(), " | Finished combination (index ",index,"): ",ntree,"|",mtry,"|",set_type,"|",avg_error))
+        
+        index=index+1
+        
+        # Save partial progress
+        cv_results = tibble(temparr_ntree, temparr_mtry_divideby, temparr_dataset, temparr_rmse, temparr_bias, temparr_var)
+        write_csv(cv_results, "grid_search_temp.csv")
       }
       else{
-        current_data = data
+        print(paste0("Skipping combination ntree=",ntree,";mtry=p/",mtry,";set_type=",set_type))
       }
-      
-      # Mark subsets for CV with corresponding k
-      sampleInd = sample(x = c(seq(1,10,1)), size = nrow(current_data),
-                         prob = c(rep(0.1,10)), replace = TRUE)
-      
-      temparr_cv_rmse = NULL
-      temparr_cv_bias = NULL
-      temparr_cv_variance = NULL
-      # Do CV
-      for (k in cv_k){
-        # Random row sampling 
-        cv_train = data[sampleInd!=k,]
-        cv_test = data[sampleInd==k,]
-        
-        rf = randomForest(Rent ~ .,cv_train, ntree=ntree, mtry=(ncol(cv_train)/mtry))
-        predictions = predict(rf, cv_test)
-        error = evalRMSE(cv_test[["Rent"]], predictions)
-        temparr_cv_rmse[k] = error
-        temparr_cv_bias[k] = bias(cv_test[["Rent"]], predictions)
-        temparr_cv_variance[k] = var(predictions)
-      }
-      
-      avg_error = mean(temparr_cv_rmse)
-      avg_bias = mean(temparr_cv_bias)
-      avg_variance = mean(temparr_cv_variance)
-      
-      # Save results of current hyperparameter evaluation
-      temparr_ntree[index] = ntree
-      temparr_mtry_divideby[index] = mtry
-      temparr_dataset[index] = set_type
-      temparr_rmse[index] = avg_error
-      temparr_bias[index] = avg_bias
-      temparr_var[index] = avg_variance
-      index=index+1
-      
-      # For tracking progress
-      print(paste0("Current combination (index ",index,"): ",ntree,"|",mtry,"|",set_type,"|",avg_error))
-      
-      # Save partial progress
-      cv_results = tibble(temparr_ntree, temparr_mtry_divideby, temparr_dataset, temparr_rmse, temparr_bias, temparr_var)
-      write_csv(cv_results, "grid_search_temp.csv")
     }
   }
 }
