@@ -7,9 +7,9 @@ data <- read_csv('./0_Data/model_input_data.csv')
 previous_gridsearch_results = read_csv('./grid_search_temp.csv')
 
 # Define allowed hyperparameter values
-arr_ntree = c(100,200,300,400,500,600,700,800,900,1000)
-arr_mtry_divideby = c(4,3,2)
-arr_data_set = c("full", "relevant_only")
+arr_ntree = c(50,100,200,300,400,500)
+arr_mtry_divideby = c(2)
+arr_data_set = c("relevant_only")
 cv_k = c(seq(1,5,1))
 
 temparr_ntree = NULL
@@ -42,6 +42,7 @@ for (ntree in arr_ntree){
         }
         
         # Mark subsets for CV with corresponding k
+        set.seed(123)
         sampleInd = sample(x = c(seq(1,10,1)), size = nrow(current_data),
                            prob = c(rep(0.1,10)), replace = TRUE)
         
@@ -51,8 +52,8 @@ for (ntree in arr_ntree){
         # Do CV
         for (k in cv_k){
           # Random row sampling 
-          cv_train = data[sampleInd!=k,]
-          cv_test = data[sampleInd==k,]
+          cv_train = current_data[sampleInd!=k,]
+          cv_test = current_data[sampleInd==k,]
           
           rf = randomForest(Rent ~ .,cv_train, ntree=ntree, mtry=(ncol(cv_train)/mtry))
           predictions = predict(rf, cv_test)
@@ -99,7 +100,10 @@ write_csv(union(previous_gridsearch_results,cv_results), "grid_search.csv")
 
 
 # Plot predictions and true target for final model
-#rf = randomForest(Rent ~ .,data, ntree=10, mtry=(ncol(data)/3))
+# Ideal combo for full data
+rf_fulldata = randomForest(Rent ~ .,data, ntree=400, mtry=(ncol(data)/2))
+save(rf, file = "./model_rf_fulldata.rda")
+load(file = "./model_rf_fulldata.rda")
 
 predictions = predict(rf, data)
 error = evalRMSE(data[["Rent"]], predictions)
