@@ -4,7 +4,7 @@ library(corrplot)
 library(dplyr)
 library(magrittr)
 
-data <- read_csv('./Lab5_PredictionChallenge_training.csv')
+data <- read_csv('./0_Data/Lab5_PredictionChallenge_training.csv')
 
 plz_einwohner <- read_csv('./0_Data/plz_einwohner.csv')
 plz_einwohner$plz <- as.numeric(plz_einwohner$plz)
