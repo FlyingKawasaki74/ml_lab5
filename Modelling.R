@@ -3,6 +3,42 @@ library(readr)
 library(randomForest)
 library(Metrics)
 
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+# Utility function for subplot support, Source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
+#-----------------------------------------------------------------------------------
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, title="") {
+  library(grid)
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  numPlots = length(plots)
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  if (numPlots==1) {
+    print(plots[[1]])
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+#-----------------------------------------------------------------------------------
+
+# Grid Search
+#-----------------------------------------------------------------------------------
 data <- read_csv('./0_Data/model_input_data.csv')
 previous_gridsearch_results = read_csv('./grid_search_temp.csv')
 
@@ -103,7 +139,6 @@ write_csv(union(previous_gridsearch_results,cv_results), "grid_search.csv")
 # Ideal combo for full data
 rf_fulldata = randomForest(Rent ~ .,data, ntree=400, mtry=(ncol(data)/2))
 save(rf_fulldata, file = "./model_rf_fulldata.rda")
-load(file = "./model_rf_fulldata.rda")
 
 predictions = predict(rf_fulldata, data)
 error = evalRMSE(data[["Rent"]], predictions)
@@ -116,10 +151,72 @@ ggplot(data=data, aes(x=livingspace))+
   geom_point(aes(y=Rent), color="blue")+
   geom_point(aes(y=predictions), color="red")
 
+ggplot(data=data, aes(x=lat))+
+  geom_point(aes(y=Rent), color="blue")+
+  geom_point(aes(y=predictions), color="red")
+
+p1 <- ggplot(data=data, aes(x=ost, group=ost))+
+  geom_boxplot(aes(y=Rent))
+p2 <- ggplot(data=data, aes(x=ost, group=ost))+
+  geom_boxplot(aes(y=predictions))
+multiplot(p1, p2, cols=2)
+
+ggplot(data=data, aes(x=einwohner_total))+
+  geom_point(aes(y=Rent), color="blue")+
+  geom_point(aes(y=predictions), color="red")
+
+ggplot(data=data, aes(x=lon))+
+  geom_point(aes(y=Rent), color="blue")+
+  geom_point(aes(y=predictions), color="red")
+
+p1 <- ggplot(data=data, aes(x=NoOfRooms, group=NoOfRooms))+
+  geom_boxplot(aes(y=Rent))
+p2 <- ggplot(data=data, aes(x=NoOfRooms, group=NoOfRooms))+
+  geom_boxplot(aes(y=predictions))
+multiplot(p1, p2, cols=1)
+
+ggplot(data=data, aes(x=einwohner))+
+  geom_point(aes(y=Rent), color="blue")+
+  geom_point(aes(y=predictions), color="red")
+
+p1 <- ggplot(data=data, aes(x=dum_builtinkitchen, group=dum_builtinkitchen))+
+  geom_boxplot(aes(y=Rent))+
+  geom_hline(yintercept=600)
+p2 <- ggplot(data=data, aes(x=dum_builtinkitchen, group=dum_builtinkitchen))+
+  geom_boxplot(aes(y=predictions))+
+  geom_hline(yintercept=600)
+multiplot(p1, p2, cols=2)
+
+
 # Parameter importance
 imp <- importance(rf_fulldata)
 
 partialPlot(rf_fulldata, as.data.frame(data), livingspace)
+partialPlot(rf_fulldata, as.data.frame(data), lat)
+partialPlot(rf_fulldata, as.data.frame(data), ost)
+partialPlot(rf_fulldata, as.data.frame(data), einwohner_total)
+partialPlot(rf_fulldata, as.data.frame(data), lon)
+partialPlot(rf_fulldata, as.data.frame(data), NoOfRooms)
+partialPlot(rf_fulldata, as.data.frame(data), einwohner)
+partialPlot(rf_fulldata, as.data.frame(data), dum_builtinkitchen)
+
+png(filename = "./1_Plots/Partial_Dependence_livingspace.png", height=350, width=350)
+partialPlot(rf_fulldata, as.data.frame(data), livingspace)
+dev.off()
+
+png(filename = "./1_Plots/Partial_Dependence_lat.png", height=350, width=350)
+partialPlot(rf_fulldata, as.data.frame(data), lat)
+dev.off()
+
+png(filename = "./1_Plots/Partial_Dependence_einwohner_total.png", height=350, width=350)
+partialPlot(rf_fulldata, as.data.frame(data), einwohner_total)
+dev.off()
+
+png(filename = "./1_Plots/Partial_Dependence_einwohner.png", height=350, width=350)
+partialPlot(rf_fulldata, as.data.frame(data), einwohner)
+dev.off()
+
+
 #---------------------------------------
 
 

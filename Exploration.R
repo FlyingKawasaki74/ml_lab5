@@ -6,10 +6,10 @@ library(magrittr)
 
 data <- read_csv('./Lab5_PredictionChallenge_training.csv')
 
-plz_einwohner <- read_csv('./plz_einwohner.csv')
+plz_einwohner <- read_csv('./0_Data/plz_einwohner.csv')
 plz_einwohner$plz <- as.numeric(plz_einwohner$plz)
 
-zuordnung_plz_ort <- read_csv('./zuordnung_plz_ort.csv')
+zuordnung_plz_ort <- read_csv('./0_Data/zuordnung_plz_ort.csv')
 zuordnung_plz_ort$plz <- as.numeric(zuordnung_plz_ort$plz)
 drop.cols <- c('osm_id')
 zuordnung_plz_ort <- zuordnung_plz_ort %>% select(-one_of(drop.cols))
