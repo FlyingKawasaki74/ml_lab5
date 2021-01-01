@@ -102,10 +102,10 @@ write_csv(union(previous_gridsearch_results,cv_results), "grid_search.csv")
 # Plot predictions and true target for final model
 # Ideal combo for full data
 rf_fulldata = randomForest(Rent ~ .,data, ntree=400, mtry=(ncol(data)/2))
-save(rf, file = "./model_rf_fulldata.rda")
+save(rf_fulldata, file = "./model_rf_fulldata.rda")
 load(file = "./model_rf_fulldata.rda")
 
-predictions = predict(rf, data)
+predictions = predict(rf_fulldata, data)
 error = evalRMSE(data[["Rent"]], predictions)
 bias = bias(data[["Rent"]], predictions)
 var = var(predictions)
@@ -117,6 +117,25 @@ ggplot(data=data, aes(x=livingspace))+
   geom_point(aes(y=predictions), color="red")
 
 # Parameter importance
-imp <- importance(rf)
+imp <- importance(rf_fulldata)
 
-partialPlot(rf, as.data.frame(data), livingspace)
+partialPlot(rf_fulldata, as.data.frame(data), livingspace)
+#---------------------------------------
+
+
+
+# Benchmark model
+#---------------------------------------
+
+current_data = data %>% select("Rent", "livingspace", "ost",
+                               "dum_builtinkitchen", "berlin", "bayern",
+                               "hamburg", "baden")
+simple_model <- lm(Rent ~ ., current_data)
+
+predictions_benchmark = predict(simple_model, current_data)
+error_benchmark = evalRMSE(data[["Rent"]], predictions_benchmark)
+bias_benchmark = bias(data[["Rent"]], predictions_benchmark)
+var_benchmark = var(predictions_benchmark)
+
+
+#---------------------------------------

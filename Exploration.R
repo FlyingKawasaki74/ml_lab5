@@ -4,7 +4,6 @@ library(corrplot)
 library(dplyr)
 library(magrittr)
 
-
 data <- read_csv('./Lab5_PredictionChallenge_training.csv')
 
 plz_einwohner <- read_csv('./plz_einwohner.csv')
