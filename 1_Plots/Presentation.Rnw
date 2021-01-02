@@ -106,7 +106,11 @@
 \end{columns}
 \end{frame}
 
-\begin{frame}{Variable Importance}
+\begin{frame}{Estimated Model - Variable Importance}
+\begin{figure}
+\centering
+\includegraphics[width=0.6\linewidth]{Histogramm.png}
+\end{figure}
 \end{frame}
 
 \end{document}

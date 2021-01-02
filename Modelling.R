@@ -2,6 +2,7 @@ library(tidyverse)
 library(readr)
 library(randomForest)
 library(Metrics)
+library(forcats)
 
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
@@ -214,6 +215,20 @@ dev.off()
 
 png(filename = "./1_Plots/Partial_Dependence_einwohner.png", height=350, width=350)
 partialPlot(rf_fulldata, as.data.frame(data), einwohner)
+dev.off()
+
+importance = read.csv("./0_Data/RF_importance.csv",sep=";")
+importance = importance[1:10,-2]
+
+png(filename = "./1_Plots/Histogramm.png", height=350, width=350)
+importance %>%
+  mutate(Regressor = fct_reorder(Regressor, Rounded)) %>%
+  ggplot(aes(x=Regressor, y=Rounded)) +
+  geom_bar(stat="identity", width=.6) +
+  coord_flip() +
+  xlab("") +
+  ylab("") + 
+  theme_bw()
 dev.off()
 
 
