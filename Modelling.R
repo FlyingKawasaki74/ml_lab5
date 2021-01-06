@@ -220,7 +220,7 @@ dev.off()
 importance = read.csv("./0_Data/RF_importance.csv",sep=";")
 importance = importance[1:10,-2]
 
-png(filename = "./1_Plots/Histogramm.png", height=350, width=350)
+png(filename = "./1_Plots/Histogramm.png", height=550, width=550)
 importance %>%
   mutate(Regressor = fct_reorder(Regressor, Rounded)) %>%
   ggplot(aes(x=Regressor, y=Rounded)) +

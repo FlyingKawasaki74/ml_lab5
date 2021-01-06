@@ -122,24 +122,29 @@
 
 
 %Slide 2
-\begin{frame}{Model Approach}
+\begin{frame}{Model Estimation Approach}
 \begin{itemize}
-\item additional variables used: 
+\item Additional input used: 
 \begin{itemize}
 \item German federal states to differentiate between rents in East vs. West Germany 
-\item number of inhabitants to differentiate between rents in rural vs. urban areas
+\item Number of inhabitants in the city to differentiate between rents in rural vs. urban areas
 \end{itemize}
-\item method: Random Forest with hyperparameters determined by grid search
-\item procedure for hyperparamter tuning:
+\item Method: Random Forest with hyperparameters determined by grid search
+\begin{itemize}
+\item no need for input standardization/transformation 
+\item automatically captures non-linear dependencies
+\end{itemize}
+\item Procedure for hyperparamter tuning:
 \begin{itemize}
 \item do a k-fold Cross-Validation for each hyperparameter combination
 \item calculate the average RMSE
 \item pick combination that minimizes the average RMSE
 \end{itemize}
+\item RMSE of Estimated Model: 102.8578 (vs. RMSE of Benchmark model: 184.7283)
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Estimated Model - Partial Dependences}
+\begin{frame}{Estimated Model - Partial Dependence Plots}
 \begin{columns}[t]
     \begin{column}{.5\linewidth}
         \begin{figure}\centering
@@ -161,6 +166,11 @@
 \centering
 \includegraphics[width=0.6\linewidth]{Histogramm.png}
 \end{figure}
+\end{frame}
+
+\begin{frame}{}
+Comprehensive data and code to accompany our model estimation is available here: 
+\url{https://github.com/FlyingKawasaki74/ml_lab5}
 \end{frame}
 
 \end{document}
